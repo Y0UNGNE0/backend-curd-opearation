@@ -1,9 +1,14 @@
+const express = require("express");
 const User = require("../models/User");
 const multer = require("multer");
 const path = require("path");
 
+const app = express();
+
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
+
 const storage = multer.diskStorage({
-  destination: "./public/uploads/", // Set your desired upload directory
+  destination: "./public/uploads/",
   filename: function (req, file, cb) {
     cb(
       null,
@@ -14,15 +19,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1000000 }, // Set your file size limit (1 MB as an example)
+  limits: { fileSize: 1000000 },
 }).single("userImage");
-
 exports.createUser = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, profileImage, company } = req.body;
     const response = await User.create({
       name,
       email,
+      company,
+      profileImage,
     });
 
     return res.status(201).json({
@@ -64,7 +70,7 @@ exports.getUserId = async (req, res) => {
     const userId = req.params.id;
     const cleanedUserId = userId.replace(/^:/, "");
 
-    const user = await User.findById(cleanedUserId);
+    const user = await User.findById(cleanedUserId).populate("company");
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -179,6 +185,11 @@ exports.uploadUserImage = async (req, res) => {
       }
 
       user.profileImage = req.file.path;
+
+      const baseUrl = "http://localhost:3000/api/v1/users";
+
+      user.profileImageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
       user.save();
 
       return res.status(200).json({
@@ -187,6 +198,53 @@ exports.uploadUserImage = async (req, res) => {
         data: user,
       });
     });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+// const path = require("path");
+// const fs = require("fs");
+// const User = require("../models/User");
+
+exports.getUserImage = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const cleanedUserId = userId.replace(/^:/, "");
+
+    const user = await User.findById(cleanedUserId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if the user has a profile image
+    if (!user.profileImage) {
+      return res.status(404).json({
+        success: false,
+        message: "User has no profile image",
+      });
+    }
+
+    const filePath = path.join(__dirname, "..", "public", user.profileImage);
+
+    // Check if the file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "Profile image not found",
+      });
+    }
+
+    // Send the image file in the response
+    res.sendFile(filePath);
   } catch (err) {
     console.error(err);
     return res.status(500).json({
