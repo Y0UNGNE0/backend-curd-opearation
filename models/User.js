@@ -15,7 +15,7 @@ const UserSchema = mongoose.Schema({
     type: Number,
   },
   profileImage: {
-    type: String, // Assuming the profile image will be stored as a file path
+    type: String,
   },
 });
 

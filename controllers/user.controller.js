@@ -219,10 +219,6 @@ exports.uploadUserImage = async (req, res) => {
   }
 };
 
-// const path = require("path");
-// const fs = require("fs");
-// const User = require("../models/User");
-
 exports.getUserImage = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -292,7 +288,6 @@ exports.aggregateByName = async (req, res) => {
     });
   }
 };
-// controllers/userController.js
 
 exports.aggregateBySameTwo = async (req, res) => {
   try {
@@ -352,3 +347,5 @@ exports.aggregateBySalary = async (req, res) => {
     });
   }
 };
+
+// here we also write logic and opration here dont define routes

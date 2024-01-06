@@ -13,3 +13,5 @@ const mongodb = () => {
 };
 
 module.exports = mongodb;
+
+// here we have established connection between monogdb by uisng mongoose

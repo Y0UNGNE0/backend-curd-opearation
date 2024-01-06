@@ -16,3 +16,5 @@ const CompanySchema = mongoose.Schema({
 });
 
 module.exports = mongoose.model("Company", CompanySchema);
+
+// here is modal which schema of chaap which how data will store
