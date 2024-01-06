@@ -7,20 +7,31 @@ const app = express();
 
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
+// const storage = multer.diskStorage({
+//   destination: "./public/uploads/",
+//   filename: function (req, file, cb) {
+//     cb(
+//       null,
+//       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+//     );
+//   },
+// });
+
 const storage = multer.diskStorage({
-  destination: "./public/uploads/",
-  filename: function (req, file, cb) {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
+  destination: (req, file, cb) => cb(null, "./uploads"), // cb -> callback
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${Math.round(
+      Math.random() * 1e9
+    )}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
   },
 });
 
-const upload = multer({
+exports.upload = multer({
   storage: storage,
   limits: { fileSize: 1000000 },
 }).single("userImage");
+
 exports.createUser = async (req, res) => {
   try {
     const { name, email, profileImage, company } = req.body;
@@ -245,6 +256,93 @@ exports.getUserImage = async (req, res) => {
 
     // Send the image file in the response
     res.sendFile(filePath);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+exports.aggregateByName = async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const aggregatedData = await User.aggregate([
+      {
+        $match: {
+          name: { $regex: new RegExp(name, "i") },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: aggregatedData,
+      message: "Data retrieved successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+// controllers/userController.js
+
+exports.aggregateBySameTwo = async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const aggregatedData = await User.aggregate([
+      {
+        $match: {
+          type: "frontend",
+        },
+      },
+      {
+        $match: {
+          name: { $regex: new RegExp(name, "i") },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: aggregatedData,
+      message: "Data retrieved successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+exports.aggregateBySalary = async (req, res) => {
+  try {
+    const { salary } = req.params;
+
+    const aggregatedData = await User.aggregate([
+      {
+        $match: {
+          salary: parseInt(salary), // Assuming salary is stored as a number
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: aggregatedData,
+      message: "Data retrieved successfully",
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({

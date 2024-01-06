@@ -8,6 +8,12 @@ const UserSchema = mongoose.Schema({
   email: {
     type: String,
   },
+  type: {
+    type: String,
+  },
+  salary: {
+    type: Number,
+  },
   profileImage: {
     type: String, // Assuming the profile image will be stored as a file path
   },
